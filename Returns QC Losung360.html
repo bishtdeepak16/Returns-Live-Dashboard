@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Returns QC Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#0d0f14;--bg2:#13161e;--bg3:#1a1e2a;--border:#252a38;
+  --accent:#f59e0b;--accent-dim:#7c5a0a;
+  --red:#ef4444;--red-dim:#450a0a;
+  --green:#22c55e;--blue:#60a5fa;--purple:#a78bfa;
+  --orange:#f97316;
+  --muted:#4b5268;--text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;
+  /* Segoe UI stack — semibold = weight 600, regular = 400 */
+  --font-ui: 'Segoe UI', 'Segoe UI Web (West European)', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-height:100vh}
+.shell{max-width:1480px;margin:0 auto;padding:22px 26px 70px}
+
+/* ── HEADER ── */
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:26px;flex-wrap:wrap}
+.brand-tag{font-family:'DM Mono';font-size:.65rem;color:var(--accent);letter-spacing:.14em;text-transform:uppercase;margin-bottom:4px}
+h1{font-family:'Syne';font-size:1.85rem;font-weight:800;line-height:1;letter-spacing:-.02em}
+h1 span{color:var(--accent)}
+.subtitle{color:var(--text3);font-size:.76rem;margin-top:5px}
+.hdr-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.live-badge{display:flex;align-items:center;gap:6px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.22);color:var(--green);border-radius:6px;padding:5px 11px;font-size:.7rem;font-weight:600;letter-spacing:.06em}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+.ts-badge{font-family:'DM Mono';font-size:.65rem;color:var(--muted);padding:5px 10px;border:1px solid var(--border);border-radius:6px}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:6px;cursor:pointer;border:1px solid var(--border);background:var(--bg3);color:var(--text2);border-radius:7px;padding:6px 13px;font-family:var(--font-ui);font-size:.76rem;font-weight:500;transition:all .15s;white-space:nowrap}
+.btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(245,158,11,.06)}
+.btn.loading svg{animation:spin 1s linear infinite}
+.btn svg{width:13px;height:13px;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:4px;margin-bottom:22px;border-bottom:1px solid var(--border);padding-bottom:0}
+.tab{font-family:var(--font-ui);font-size:.82rem;font-weight:500;padding:9px 18px;cursor:pointer;color:var(--text3);border-bottom:2px solid transparent;transition:all .15s;margin-bottom:-1px}
+.tab:hover{color:var(--text2)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+
+/* ══════════════════════════════════════════════
+   KPI CARDS — REDESIGNED
+══════════════════════════════════════════════ */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.kpi {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  padding: 16px 18px 14px;
+  position: relative;
+  overflow: hidden;
+  transition: transform .15s, box-shadow .15s;
+}
+.kpi:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0,0,0,.5);
+}
+
+/* Top accent bar */
+.kpi::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  border-radius: 13px 13px 0 0;
+}
+.kpi.c-total::after   { background: linear-gradient(90deg, #94a3b8, transparent); }
+.kpi.c-pending::after { background: linear-gradient(90deg, var(--accent), transparent); }
+.kpi.c-d0::after      { background: linear-gradient(90deg, #34d399, transparent); }
+.kpi.c-d3::after      { background: linear-gradient(90deg, var(--blue), transparent); }
+.kpi.c-d7::after      { background: linear-gradient(90deg, #fbbf24, transparent); }
+.kpi.c-d14::after     { background: linear-gradient(90deg, var(--orange), transparent); }
+.kpi.c-d14p::after    { background: linear-gradient(90deg, var(--red), transparent); }
+.kpi.c-bad::after     { background: linear-gradient(90deg, var(--purple), transparent); }
+
+/* Subtle inner glow behind the top bar */
+.kpi.c-d14p { background: linear-gradient(160deg, rgba(239,68,68,.06) 0%, var(--bg2) 60%); }
+.kpi.c-bad  { background: linear-gradient(160deg, rgba(167,139,250,.06) 0%, var(--bg2) 60%); }
+.kpi.c-d14  { background: linear-gradient(160deg, rgba(249,115,22,.05) 0%, var(--bg2) 60%); }
+
+/* Icon pill top-right */
+.kpi-icon {
+  position: absolute;
+  top: 14px; right: 14px;
+  font-size: .85rem;
+  opacity: .55;
+}
+
+/* Label */
+.kpi-label {
+  font-size: .62rem;
+  font-family: var(--font-ui);
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-weight: 400;
+  margin-bottom: 8px;
+}
+
+/* Main value — Segoe UI Semibold */
+.kpi-val {
+  font-family: var(--font-ui);
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -.01em;
+}
+.kpi.c-total   .kpi-val { color: #94a3b8; }
+.kpi.c-pending .kpi-val { color: var(--accent); }
+.kpi.c-d0      .kpi-val { color: #34d399; }
+.kpi.c-d3      .kpi-val { color: var(--blue); }
+.kpi.c-d7      .kpi-val { color: #fbbf24; }
+.kpi.c-d14     .kpi-val { color: var(--orange); }
+.kpi.c-d14p    .kpi-val { color: var(--red); }
+.kpi.c-bad     .kpi-val { color: var(--purple); }
+
+/* Bottom row: sub-label + percentage badge */
+.kpi-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  gap: 6px;
+}
+.kpi-sub {
+  font-size: .63rem;
+  font-family: var(--font-ui);
+  color: var(--text3);
+  line-height: 1.3;
+}
+.kpi-pct {
+  font-family: var(--font-ui);
+  font-size: .62rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Percentage badge colors per card type */
+.kpi.c-d0   .kpi-pct { background: rgba(52,211,153,.12); color: #34d399; border: 1px solid rgba(52,211,153,.22); }
+.kpi.c-d3   .kpi-pct { background: rgba(96,165,250,.12); color: var(--blue); border: 1px solid rgba(96,165,250,.22); }
+.kpi.c-d7   .kpi-pct { background: rgba(251,191,36,.12); color: #fbbf24; border: 1px solid rgba(251,191,36,.22); }
+.kpi.c-d14  .kpi-pct { background: rgba(249,115,22,.12); color: var(--orange); border: 1px solid rgba(249,115,22,.22); }
+.kpi.c-d14p .kpi-pct { background: rgba(239,68,68,.15); color: var(--red); border: 1px solid rgba(239,68,68,.28); }
+.kpi.c-bad  .kpi-pct { background: rgba(167,139,250,.12); color: var(--purple); border: 1px solid rgba(167,139,250,.22); }
+.kpi.c-pending .kpi-pct { background: rgba(245,158,11,.12); color: var(--accent); border: 1px solid rgba(245,158,11,.22); }
+.kpi.c-total   .kpi-pct { display: none; } /* no % for total */
+
+/* Progress bar at bottom of each aging card */
+.kpi-bar-wrap {
+  margin-top: 10px;
+  height: 3px;
+  background: var(--border);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.kpi-bar {
+  height: 100%;
+  border-radius: 99px;
+  transition: width .6s ease;
+  width: 0%;
+}
+.kpi.c-d0   .kpi-bar { background: #34d399; }
+.kpi.c-d3   .kpi-bar { background: var(--blue); }
+.kpi.c-d7   .kpi-bar { background: #fbbf24; }
+.kpi.c-d14  .kpi-bar { background: var(--orange); }
+.kpi.c-d14p .kpi-bar { background: var(--red); }
+.kpi.c-pending .kpi-bar { background: var(--accent); }
+.kpi.c-bad  .kpi-bar { background: var(--purple); }
+.kpi.c-total .kpi-bar-wrap { display: none; }
+
+/* ── SECTION TITLE ── */
+.sec-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.sec-title{font-family:'Syne';font-size:.95rem;font-weight:700;flex:1}
+.sec-title small{font-family:var(--font-ui);font-size:.7rem;color:var(--text3);font-weight:400;margin-left:6px}
+
+/* ── FILTERS ROW ── */
+.filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+select{background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:7px;padding:6px 26px 6px 10px;font-family:var(--font-ui);font-size:.76rem;appearance:none;cursor:pointer;outline:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M8 10.5 3 5.5h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 7px center;background-size:11px}
+select:focus{border-color:var(--accent)}
+.ctrl-btn{background:var(--bg3);border:1px solid var(--border);color:var(--text3);border-radius:5px;padding:4px 9px;font-size:.68rem;cursor:pointer;font-family:'DM Mono';transition:all .13s}
+.ctrl-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ── LEGEND ── */
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px;font-size:.66rem;font-family:'DM Mono';color:var(--text3)}
+.leg{display:flex;align-items:center;gap:4px}
+.dot{width:7px;height:7px;border-radius:50%}
+
+/* ── TABLES ── */
+.table-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:13px;overflow:auto;box-shadow:0 4px 28px rgba(0,0,0,.45);margin-bottom:30px}
+table{width:100%;border-collapse:collapse}
+thead tr{background:var(--bg3);border-bottom:2px solid var(--border);position:sticky;top:0;z-index:5}
+th{font-family:'DM Mono';font-size:.65rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);padding:10px 13px;text-align:right;white-space:nowrap}
+th:first-child{text-align:left;min-width:250px;padding-left:18px}
+th.d0{border-top:2px solid #34d399;color:#34d399}
+th.d3{border-top:2px solid var(--blue);color:var(--blue)}
+th.d7{border-top:2px solid #fbbf24;color:#fbbf24}
+th.d14{border-top:2px solid var(--orange);color:var(--orange)}
+th.d14p{border-top:2px solid var(--red);color:var(--red)}
+th.tot{border-top:2px solid var(--purple);color:var(--purple)}
+th.bad{border-top:2px solid var(--red);color:var(--red)}
+
+tr.fc-row{background:#1e2233;cursor:pointer;transition:background .13s}
+tr.fc-row:hover{background:#232844}
+tr.fc-row td{padding:9px 13px;border-bottom:1px solid var(--border);font-weight:700;font-size:.82rem;text-align:right}
+tr.fc-row td:first-child{font-family:'Syne';color:var(--accent);padding-left:18px}
+tr.cl-row{background:#171b28;cursor:pointer;transition:background .13s}
+tr.cl-row:hover{background:#1b1f2e}
+tr.cl-row td{padding:7px 13px;border-bottom:1px solid #1e2230;font-size:.8rem;text-align:right;color:var(--text2)}
+tr.cl-row td:first-child{font-weight:600;color:var(--blue);padding-left:36px}
+tr.mk-row{background:#13161e;transition:background .13s}
+tr.mk-row:hover{background:#161922}
+tr.mk-row td{padding:6px 13px;border-bottom:1px solid #171b28;font-size:.76rem;text-align:right;color:var(--text2)}
+tr.mk-row td:first-child{padding-left:56px;font-weight:400}
+tr.total-row{background:#1e1608;border-top:2px solid var(--accent-dim)}
+tr.total-row td{padding:10px 13px;font-family:'Syne';font-weight:800;font-size:.86rem;text-align:right;color:var(--accent)}
+tr.total-row td:first-child{padding-left:18px}
+
+td.num{font-family:'DM Mono';font-weight:500}
+td.zero{color:var(--muted)!important}
+td.hot{color:var(--red)!important;font-weight:700}
+td.warm{color:var(--orange)!important}
+td.watch{color:#fbbf24!important}
+td.tot-cell{color:var(--purple)!important;font-weight:700}
+.chevron{display:inline-block;margin-right:6px;transition:transform .18s;font-size:.68rem;color:var(--text3);vertical-align:middle}
+.chevron.open{transform:rotate(90deg)}
+tr.hidden{display:none}
+
+tr.bad-row{background:#1a0f0f;transition:background .13s}
+tr.bad-row:hover{background:#1e1212}
+tr.bad-row td{padding:7px 13px;border-bottom:1px solid #2a1515;font-size:.76rem;color:var(--text2)}
+tr.bad-row td:first-child{font-family:'DM Mono';font-size:.72rem;color:#fca5a5}
+.badge{display:inline-block;font-size:.62rem;font-family:'DM Mono';padding:2px 7px;border-radius:4px;font-weight:500}
+.badge.bad{background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.25)}
+.badge.no-ticket{background:rgba(251,191,36,.12);color:#fbbf24;border:1px solid rgba(251,191,36,.22)}
+.badge.fc{background:rgba(96,165,250,.1);color:var(--blue);border:1px solid rgba(96,165,250,.2)}
+.badge.mk{background:rgba(167,139,250,.1);color:var(--purple);border:1px solid rgba(167,139,250,.2)}
+
+.search-wrap{position:relative;flex:1;min-width:180px;max-width:280px}
+.search-wrap input{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:7px;padding:6px 10px 6px 30px;font-family:var(--font-ui);font-size:.76rem;outline:none}
+.search-wrap input:focus{border-color:var(--accent)}
+.search-wrap svg{position:absolute;left:8px;top:50%;transform:translateY(-50%);width:13px;height:13px;color:var(--text3)}
+
+.state-msg{padding:50px 20px;text-align:center;color:var(--text3);display:flex;flex-direction:column;align-items:center;gap:10px}
+.spinner{width:28px;height:28px;border:2.5px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+
+.panel{display:none}
+.panel.active{display:block}
+
+.diag-box{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:20px;display:none}
+.diag-box.open{display:block}
+.diag-step{margin-bottom:10px;font-size:.76rem}
+.diag-label{font-weight:600;color:var(--text2);margin-bottom:4px}
+.diag-result{font-family:'DM Mono';font-size:.7rem;padding:9px 13px;background:var(--bg);border-radius:6px;white-space:pre-wrap;word-break:break-all;max-height:140px;overflow:auto;line-height:1.6}
+.diag-result.ok{border-left:3px solid var(--green);color:#86efac}
+.diag-result.err{border-left:3px solid var(--red);color:#fca5a5}
+.diag-result.info{border-left:3px solid var(--blue);color:#93c5fd}
+.ok-banner{margin-top:10px;padding:9px 13px;background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.2);border-radius:7px;color:var(--green);font-size:.76rem}
+
+/* ── PIE CHART SECTION ── */
+.charts-row {
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 20px;
+  align-items: start;
+  margin-bottom: 30px;
+}
+@media(max-width:860px){ .charts-row{grid-template-columns:1fr;} }
+
+.chart-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  padding: 24px 26px;
+}
+.chart-card-title {
+  font-family: 'Syne';
+  font-size:.95rem;
+  font-weight: 700;
+  margin-bottom: 22px;
+  color: var(--text);
+}
+.pie-wrap {
+  position: relative;
+  width: 260px;
+  height: 260px;
+  margin: 0 auto 24px;
+}
+.pie-wrap canvas { display: block; }
+.pie-center {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+}
+.pie-center-val {
+  font-family: var(--font-ui);
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1;
+}
+.pie-center-lbl {
+  font-size: .6rem;
+  font-family: var(--font-ui);
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  margin-top: 3px;
+}
+.pie-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.pie-leg-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  transition: all .15s;
+}
+.pie-leg-item:hover { background: var(--bg3); border-color: var(--border); }
+.pie-leg-item.active { background: var(--bg3); border-color: var(--line2); }
+.pie-leg-left { display: flex; align-items: center; gap: 8px; }
+.pie-leg-dot {
+  width: 10px; height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.pie-leg-name {
+  font-family: var(--font-ui);
+  font-size: .76rem;
+  font-weight: 600;
+  color: var(--text2);
+}
+.pie-leg-right { display: flex; align-items: center; gap: 8px; }
+.pie-leg-count {
+  font-family: var(--font-ui);
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.pie-leg-pct {
+  font-family: var(--font-ui);
+  font-size: .68rem;
+  font-weight: 400;
+  color: var(--text3);
+  min-width: 38px;
+  text-align: right;
+}
+
+/* summary stats panel right of pie */
+.pie-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+}
+@media(max-width:1100px){ .pie-stats{grid-template-columns:1fr 1fr;} }
+.pie-stat-box {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 16px 18px;
+}
+.pie-stat-label {
+  font-size: .62rem;
+  font-family: var(--font-ui);
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  margin-bottom: 7px;
+}
+.pie-stat-val {
+  font-family: var(--font-ui);
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1;
+}
+.pie-stat-sub {
+  font-size: .63rem;
+  color: var(--text3);
+  margin-top: 5px;
+  font-family: var(--font-ui);
+}
+
+/* ── BAD QC MATRIX TABLE ── */
+tr.bad-cl-row { background: #1a1320; cursor: pointer; transition: background .13s; }
+tr.bad-cl-row:hover { background: #1f1828; }
+tr.bad-cl-row td { padding: 8px 13px; border-bottom: 1px solid var(--border); font-weight: 700; font-size: .82rem; text-align: right; }
+tr.bad-cl-row td:first-child { font-family: 'Syne'; color: var(--purple); padding-left: 18px; }
+
+tr.bad-mk-row { background: #150f1a; transition: background .13s; }
+tr.bad-mk-row:hover { background: #191320; }
+tr.bad-mk-row td { padding: 6px 13px; border-bottom: 1px solid #1e1428; font-size: .78rem; text-align: right; color: var(--text2); }
+tr.bad-mk-row td:first-child { padding-left: 38px; color: #c4b5fd; }
+
+tr.bad-total-row { background: #1e1220; border-top: 2px solid #6d28d9; }
+tr.bad-total-row td { padding: 10px 13px; font-family: 'Syne'; font-weight: 800; font-size: .86rem; text-align: right; color: var(--purple); }
+tr.bad-total-row td:first-child { padding-left: 18px; }
+
+th.bd3  { border-top: 2px solid var(--blue);   color: var(--blue); }
+th.bd7  { border-top: 2px solid #fbbf24;        color: #fbbf24; }
+th.bd14 { border-top: 2px solid var(--orange);  color: var(--orange); }
+th.bd14p{ border-top: 2px solid var(--red);     color: var(--red); }
+th.btot { border-top: 2px solid var(--purple);  color: var(--purple); }
+
+.footer-ts{font-family:'DM Mono';font-size:.63rem;color:var(--muted);margin-top:8px;text-align:right}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ══ HEADER ══ -->
+<header>
+  <div>
+    <div class="brand-tag">⬡ Returns Intelligence Platform</div>
+    <h1>QC <span>Dashboard</span></h1>
+    <p class="subtitle">Live · Supabase · vw_shipment_report · qc_status ∈ {PENDING, BAD, GOOD}</p>
+  </div>
+  <div class="hdr-right">
+    <div class="live-badge"><span class="live-dot"></span>LIVE</div>
+    <div class="ts-badge" id="tsBadge">—</div>
+    <button class="btn" onclick="toggleDiag()" style="border-color:#60a5fa44;color:var(--blue)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Diagnose
+    </button>
+    <button class="btn" id="refreshBtn" onclick="loadData()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 4v5h5M20 20v-5h-5"/><path d="M4 9a8 8 0 0115.5-2M20 15a8 8 0 01-15.5 2"/></svg>
+      Refresh
+    </button>
+  </div>
+</header>
+
+<!-- ══ DIAGNOSTIC PANEL ══ -->
+<div class="diag-box" id="diagBox">
+  <div style="font-family:'Syne';font-size:.88rem;font-weight:700;margin-bottom:12px;color:var(--text)">🔍 Connection Diagnostic</div>
+  <div id="diagContent"><div style="color:var(--text3);font-size:.76rem">Click to run tests…</div></div>
+</div>
+
+<!-- ══ KPI CARDS ══ -->
+<div class="kpi-row">
+
+  <!-- 1. Total Shipments -->
+  <div class="kpi c-total">
+    <div class="kpi-icon">📦</div>
+    <div class="kpi-label">Total Returns</div>
+    <div class="kpi-val" id="k-total-ship">—</div>
+    <div class="kpi-foot">
+      <div class="kpi-sub">All inbound shipments</div>
+    </div>
+    <div class="kpi-bar-wrap"><div class="kpi-bar" id="bar-total-ship"></div></div>
+  </div>
+
+  <!-- 2. Total Pending -->
+  <div class="kpi c-pending">
+    <div class="kpi-icon">⏳</div>
+    <div class="kpi-label">QC Pending</div>
+    <div class="kpi-val" id="k-total">—</div>
+    <div class="kpi-foot">
+      <div class="kpi-sub">qc_status = PENDING</div>
+      <div class="kpi-pct" id="pct-pending">—</div>
+    </div>
+    <div class="kpi-bar-wrap"><div class="kpi-bar" id="bar-pending"></div></div>
+  </div>
+
+  <!-- 3. D0 -->
+  <div class="kpi c-d0">
+    <div class="kpi-icon">✅</div>
+    <div class="kpi-label">D0 · Today</div>
+    <div class="kpi-val" id="k-d0">—</div>
+    <div class="kpi-foot">
+      <div class="kpi-sub">Received today · Fresh</div>
+      <div class="kpi-pct" id="pct-d0">—</div>
+    </div>
+    <div class="kpi-bar-wrap"><div class="kpi-bar" id="bar-d0"></div></div>
+  </div>
+
+  <!-- 4. D+3 -->
+  <div class="kpi c-d3">
+    <div class="kpi-icon">🔵</div>
+    <div class="kpi-label">D+3 · 1–3 Days</div>
+    <div class="kpi-val" id="k-d3">—</div>
+    <div class="kpi-foot">
+      <div class="kpi-sub">Early aging · Monitor</div>
+      <div class="kpi-pct" id="pct-d3">—</div>
+    </div>
+    <div class="kpi-bar-wrap"><div class="kpi-bar" id="bar-d3"></div></div>
+  </div>
+
+  <!-- 5. D+7 -->
+  <div class="kpi c-d7">
+    <div class="kpi-icon">⚠️</div>
+    <div class="kpi-label">D+7 · 4–7 Days</div>
+    <div class="kpi-val" id="k-d7">—</div>
+    <div class="kpi-foot">
+      <div class="kpi-sub">Watch · Approaching SLA</div>
+      <div class="kpi-pct" id="pct-d7">—</div>
+    </div>
+    <div class="kpi-bar-wrap"><div class="kpi-bar" id="bar-d7"></div></div>
+  </div>
+
+  <!-- 6. D+14 -->
+  <div class="kpi c-d14">
+    <div class="kpi-icon">🔶</div>
+    <div class="kpi-label">D+14 · 8–14 Days</div>
+    <div class="kpi-val" id="k-d14">—</div>
+    <div class="kpi-foot">
+      <div class="kpi-sub">Warning · SLA at risk</div>
+      <div class="kpi-pct" id="pct-d14">—</div>
+    </div>
+    <div class="kpi-bar-wrap"><div class="kpi-bar" id="bar-d14"></div></div>
+  </div>
+
+  <!-- 7. >D+14 -->
+  <div class="kpi c-d14p">
+    <div class="kpi-icon">🚨</div>
+    <div class="kpi-label">&gt;D+14 · Critical</div>
+    <div class="kpi-val" id="k-d14p">—</div>
+    <div class="kpi-foot">
+      <div class="kpi-sub">SLA breached · Act now</div>
+      <div class="kpi-pct" id="pct-d14p">—</div>
+    </div>
+    <div class="kpi-bar-wrap"><div class="kpi-bar" id="bar-d14p"></div></div>
+  </div>
+
+  <!-- 8. BAD · No Ticket -->
+  <div class="kpi c-bad">
+    <div class="kpi-icon">🎫</div>
+    <div class="kpi-label">BAD · No Ticket</div>
+    <div class="kpi-val" id="k-bad">—</div>
+    <div class="kpi-foot">
+      <div class="kpi-sub">BAD QC · ticket_id blank</div>
+      <div class="kpi-pct" id="pct-bad">—</div>
+    </div>
+    <div class="kpi-bar-wrap"><div class="kpi-bar" id="bar-bad"></div></div>
+  </div>
+
+</div>
+<!-- /kpi-row -->
+
+<!-- ══ TABS ══ -->
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('pending',this)">📋 QC Pending Aging</div>
+  <div class="tab" onclick="switchTab('bad',this)">🔴 BAD QC · No Ticket Raised</div>
+  <div class="tab" onclick="switchTab('chart',this)">🥧 QC Status Distribution</div>
+</div>
+
+<!-- ══ TAB 1 — QC PENDING AGING ══ -->
+<div class="panel active" id="panel-pending">
+  <div class="sec-head">
+    <div class="sec-title">QC Pending — Daywise Aging <small id="pendingCount"></small></div>
+    <div class="filters">
+      <select id="filterFC" onchange="renderPending()"><option value="">All FCs</option></select>
+      <select id="filterClient" onchange="renderPending()"><option value="">All Clients</option></select>
+      <select id="filterMK" onchange="renderPending()"><option value="">All Marketplaces</option></select>
+      <button class="ctrl-btn" onclick="expandAll()">▶ Expand All</button>
+      <button class="ctrl-btn" onclick="collapseAll()">◀ Collapse</button>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span class="leg"><span class="dot" style="background:#ef4444"></span>&gt;D+14 Critical</span>
+    <span class="leg"><span class="dot" style="background:#f97316"></span>D+14 Warning</span>
+    <span class="leg"><span class="dot" style="background:#fbbf24"></span>D+7 Watch</span>
+    <span class="leg"><span class="dot" style="background:#60a5fa"></span>D+3</span>
+    <span class="leg"><span class="dot" style="background:#34d399"></span>D+0 Fresh</span>
+  </div>
+
+  <div class="table-wrap">
+    <div id="pendingTable">
+      <div class="state-msg"><div class="spinner"></div><span>Loading QC Pending data…</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TAB 2 — BAD QC · NO TICKET ══ -->
+<div class="panel" id="panel-bad">
+  <div class="sec-head">
+    <div class="sec-title" style="color:var(--purple)">🔴 BAD QC — Ticket Not Raised <small id="badCount" style="color:var(--text3)"></small></div>
+    <div class="filters">
+      <select id="filterBadFC" onchange="renderBad()"><option value="">All FCs</option></select>
+      <select id="filterBadMK" onchange="renderBad()"><option value="">All Marketplaces</option></select>
+    </div>
+  </div>
+
+  <div style="background:rgba(167,139,250,.06);border:1px solid rgba(167,139,250,.2);border-radius:9px;padding:10px 16px;margin-bottom:12px;font-size:.76rem;color:#c4b5fd">
+    ⚠️ Logic: <strong>qc_status = "BAD"</strong> AND <strong>ticket_id is blank/null</strong> — Rows = Client → Marketplace · Columns = Aging window · Values = count of tracking IDs
+  </div>
+
+  <div class="table-wrap">
+    <div id="badTable">
+      <div class="state-msg"><div class="spinner"></div><span>Loading BAD QC data…</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TAB 3 — QC STATUS PIE CHART ══ -->
+<div class="panel" id="panel-chart">
+  <div class="charts-row">
+
+    <!-- Left: Pie donut -->
+    <div class="chart-card">
+      <div class="chart-card-title">QC Status Distribution</div>
+      <div class="pie-wrap">
+        <canvas id="pieCanvas" width="260" height="260"></canvas>
+        <div class="pie-center">
+          <div class="pie-center-val" id="pieCenterVal">—</div>
+          <div class="pie-center-lbl" id="pieCenterLbl">Total</div>
+        </div>
+      </div>
+      <div class="pie-legend" id="pieLegend">
+        <div class="state-msg" style="padding:10px"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- Right: Stats grid -->
+    <div class="chart-card">
+      <div class="chart-card-title">QC Status Summary</div>
+      <div class="pie-stats">
+        <div class="pie-stat-box"><div class="pie-stat-label">Total Returns</div><div class="pie-stat-val" id="ps-total" style="color:#94a3b8">—</div><div class="pie-stat-sub">All inbound shipments</div></div>
+        <div class="pie-stat-box"><div class="pie-stat-label">✅ GOOD</div><div class="pie-stat-val" id="ps-good" style="color:var(--green)">—</div><div class="pie-stat-sub" id="ps-good-pct">— of total</div></div>
+        <div class="pie-stat-box"><div class="pie-stat-label">⏳ PENDING</div><div class="pie-stat-val" id="ps-pending" style="color:var(--accent)">—</div><div class="pie-stat-sub" id="ps-pending-pct">— of total</div></div>
+        <div class="pie-stat-box"><div class="pie-stat-label">🔴 BAD</div><div class="pie-stat-val" id="ps-bad" style="color:var(--red)">—</div><div class="pie-stat-sub" id="ps-bad-pct">— of total</div></div>
+        <div class="pie-stat-box"><div class="pie-stat-label">🎫 BAD · No Ticket</div><div class="pie-stat-val" id="ps-badnt" style="color:var(--purple)">—</div><div class="pie-stat-sub">Needs SPF raised</div></div>
+        <div class="pie-stat-box"><div class="pie-stat-label">🚨 Critical &gt;D+14</div><div class="pie-stat-val" id="ps-critical" style="color:var(--red)">—</div><div class="pie-stat-sub">Pending SLA breach</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="footer-ts" id="footerTs"></div>
+</div><!-- /shell -->
+
+<script>
+/* ════════════════════════════════════
+   CONFIG
+════════════════════════════════════ */
+const URL_BASE = "https://lfexfsblflthnigiqzyj.supabase.co";
+const API_KEY  = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxmZXhmc2JsZmx0aG5pZ2lxenlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzNTkwOTMsImV4cCI6MjA4MDkzNTA5M30.Pf4LRdKc3Xs1wVVagjkvcEofT1WvhERgjbKWqBfWcso";
+const TABLE    = "vw_shipment_report";
+
+/* ════════════════════════════════════
+   STATE
+════════════════════════════════════ */
+let pendingRows  = [];
+let badRows      = [];
+let totalShipments = 0;
+let qcStatusCounts = { GOOD: 0, BAD: 0, PENDING: 0, totalBad: 0 }; // ← NEW: for pie
+let pendingTree  = {};
+let expandedFC   = new Set();
+let expandedCL   = new Set();
+
+const today = new Date(); today.setHours(0,0,0,0);
+
+/* ════════════════════════════════════
+   AGING BUCKET
+════════════════════════════════════ */
+function agingBucket(dateStr) {
+  if (!dateStr) return 'd14p';
+  const d = new Date(dateStr); d.setHours(0,0,0,0);
+  const diff = Math.floor((today - d) / 86400000);
+  if (diff === 0)  return 'd0';
+  if (diff <= 3)   return 'd3';
+  if (diff <= 7)   return 'd7';
+  if (diff <= 14)  return 'd14';
+  return 'd14p';
+}
+function agingLabel(bucket) {
+  return {d0:'D0', d3:'D+3', d7:'D+7', d14:'D+14', d14p:'>D+14'}[bucket] || '?';
+}
+
+/* ════════════════════════════════════
+   FETCH (paginated)
+════════════════════════════════════ */
+async function apiGet(path, headers={}) {
+  const r = await fetch(`${URL_BASE}${path}`, {
+    headers: { apikey: API_KEY, Authorization:`Bearer ${API_KEY}`, ...headers }
+  });
+  return r;
+}
+
+async function fetchPaged(filter, cols) {
+  let rows=[], from=0, ps=1000;
+  while(true){
+    const r = await apiGet(
+      `/rest/v1/${TABLE}?${filter}&select=${cols}`,
+      { Range:`${from}-${from+ps-1}` }
+    );
+    if(!r.ok){
+      const b = await r.text();
+      const p = tryJSON(b);
+      throw new Error(
+        r.status===403 ? `RLS blocking access (403). Fix: Supabase → Authentication → Policies → Add read policy for "${TABLE}"`
+        : r.status===401 ? `Invalid API key (401)`
+        : r.status===404 ? `Table "${TABLE}" not found (404)`
+        : `HTTP ${r.status}: ${p?.message||b.slice(0,150)}`
+      );
+    }
+    const batch = await r.json();
+    rows = rows.concat(batch);
+    if(batch.length < ps) break;
+    from += ps;
+  }
+  return rows;
+}
+
+/* Fetch just the count (no rows) using HEAD + Prefer: count=exact */
+async function fetchCount(filter) {
+  try {
+    const r = await apiGet(
+      `/rest/v1/${TABLE}?${filter}&select=tracking_id`,
+      { Prefer:'count=exact', Range:'0-0' }
+    );
+    const cr = r.headers.get('content-range') || '';
+    // content-range format: 0-0/TOTAL  or  */TOTAL
+    const match = cr.match(/\/(\d+)$/);
+    return match ? parseInt(match[1], 10) : 0;
+  } catch(e) {
+    return 0;
+  }
+}
+
+function tryJSON(s){try{return JSON.parse(s);}catch{return null;}}
+
+/* ════════════════════════════════════
+   LOAD ALL DATA
+════════════════════════════════════ */
+async function loadData() {
+  const btn = document.getElementById('refreshBtn');
+  btn.classList.add('loading');
+  setTableLoading('pendingTable','Loading QC Pending…');
+  setTableLoading('badTable','Loading BAD QC records…');
+
+  try {
+    // 1. Total shipments count
+    totalShipments = await fetchCount('');
+
+    // 2. Fetch qc_status counts for pie chart (GOOD, BAD, PENDING)
+    const statusRows = await fetchPaged('', 'qc_status');
+    qcStatusCounts.GOOD    = statusRows.filter(r => r.qc_status === 'GOOD').length;
+    qcStatusCounts.BAD     = statusRows.filter(r => r.qc_status === 'BAD').length;
+    qcStatusCounts.PENDING = statusRows.filter(r => r.qc_status === 'PENDING').length;
+
+    // 3. Pending rows (full data for table)
+    pendingRows = await fetchPaged(
+      'qc_status=eq.PENDING',
+      'fc_code,fc_name,client_name,marketplace_name,shipment_report_date,tracking_id'
+    );
+
+    // 4. BAD + no ticket rows
+    badRows = await fetchPaged(
+      'qc_status=eq.BAD&ticket_id=is.null',
+      'tracking_id,fc_code,fc_name,client_name,marketplace_name,shipment_report_date,logistics_partner,order_id,qc_completed_at,damage_summary'
+    );
+    qcStatusCounts.totalBad = badRows.length;
+
+    // Build tree
+    pendingTree = buildPendingTree(pendingRows);
+
+    // Populate filters
+    populateFilters(pendingTree, pendingRows, badRows);
+
+    // Render
+    renderPending();
+    renderBad();
+    updateKPIs();
+    renderPieChart();
+
+    // Timestamp
+    const ts = new Date().toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'});
+    document.getElementById('tsBadge').textContent = ts;
+    document.getElementById('footerTs').textContent =
+      `Last refreshed: ${ts} · ${pendingRows.length.toLocaleString('en-IN')} pending · ${badRows.length.toLocaleString('en-IN')} bad-no-ticket`;
+
+  } catch(e) {
+    setTableError('pendingTable', e.message);
+    setTableError('badTable', e.message);
+  } finally {
+    btn.classList.remove('loading');
+  }
+}
+
+/* ════════════════════════════════════
+   BUILD PENDING TREE
+════════════════════════════════════ */
+function emptyB(){ return {d0:0,d3:0,d7:0,d14:0,d14p:0}; }
+function totB(b){ return b.d0+b.d3+b.d7+b.d14+b.d14p; }
+
+function buildPendingTree(rows){
+  const tree={};
+  for(const r of rows){
+    const fc=r.fc_code||'—', fcN=r.fc_name||fc;
+    const cl=r.client_name||'—';
+    const mk=r.marketplace_name||'—';
+    const bk=agingBucket(r.shipment_report_date);
+    if(!tree[fc]) tree[fc]={name:fcN, clients:{}, counts:emptyB()};
+    if(!tree[fc].clients[cl]) tree[fc].clients[cl]={marketplaces:{}, counts:emptyB()};
+    if(!tree[fc].clients[cl].marketplaces[mk]) tree[fc].clients[cl].marketplaces[mk]=emptyB();
+    tree[fc].counts[bk]++;
+    tree[fc].clients[cl].counts[bk]++;
+    tree[fc].clients[cl].marketplaces[mk][bk]++;
+  }
+  return tree;
+}
+
+/* ════════════════════════════════════
+   KPIs — UPDATED
+════════════════════════════════════ */
+function pct(part, whole) {
+  if (!whole || whole === 0) return '—';
+  return (part / whole * 100).toFixed(1) + '%';
+}
+
+function setBar(id, part, whole) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const p = whole > 0 ? Math.min(100, (part / whole) * 100) : 0;
+  // Use rAF so the CSS transition fires
+  requestAnimationFrame(() => { el.style.width = p + '%'; });
+}
+
+function updateKPIs(){
+  // Grand totals from pending tree
+  const grand = emptyB();
+  Object.values(pendingTree).forEach(f =>
+    ['d0','d3','d7','d14','d14p'].forEach(k => grand[k] += f.counts[k])
+  );
+  const pendingTotal = totB(grand);
+  const totalBase    = totalShipments || pendingTotal; // fallback
+
+  // Values
+  document.getElementById('k-total-ship').textContent = totalShipments > 0
+    ? totalShipments.toLocaleString('en-IN') : pendingTotal.toLocaleString('en-IN');
+  document.getElementById('k-total').textContent   = pendingTotal.toLocaleString('en-IN');
+  document.getElementById('k-d0').textContent      = grand.d0.toLocaleString('en-IN');
+  document.getElementById('k-d3').textContent      = grand.d3.toLocaleString('en-IN');
+  document.getElementById('k-d7').textContent      = grand.d7.toLocaleString('en-IN');
+  document.getElementById('k-d14').textContent     = grand.d14.toLocaleString('en-IN');
+  document.getElementById('k-d14p').textContent    = grand.d14p.toLocaleString('en-IN');
+  document.getElementById('k-bad').textContent     = badRows.length.toLocaleString('en-IN');
+
+  // Percentages — all aging buckets as % of total pending
+  document.getElementById('pct-pending').textContent = pct(pendingTotal, totalBase);
+  document.getElementById('pct-d0').textContent      = pct(grand.d0,    pendingTotal);
+  document.getElementById('pct-d3').textContent      = pct(grand.d3,    pendingTotal);
+  document.getElementById('pct-d7').textContent      = pct(grand.d7,    pendingTotal);
+  document.getElementById('pct-d14').textContent     = pct(grand.d14,   pendingTotal);
+  document.getElementById('pct-d14p').textContent    = pct(grand.d14p,  pendingTotal);
+  document.getElementById('pct-bad').textContent     = pct(badRows.length, totalBase);
+
+  // Progress bars — aging as % of pending; pending & bad as % of total
+  setBar('bar-pending', pendingTotal, totalBase);
+  setBar('bar-d0',   grand.d0,   pendingTotal);
+  setBar('bar-d3',   grand.d3,   pendingTotal);
+  setBar('bar-d7',   grand.d7,   pendingTotal);
+  setBar('bar-d14',  grand.d14,  pendingTotal);
+  setBar('bar-d14p', grand.d14p, pendingTotal);
+  setBar('bar-bad',  badRows.length, totalBase);
+}
+
+/* ════════════════════════════════════
+   POPULATE FILTERS
+════════════════════════════════════ */
+function populateFilters(tree, pRows, bRows){
+  fillSelect('filterFC',    [...new Set(pRows.map(r=>r.fc_code).filter(Boolean))].sort(), v=>v);
+  fillSelect('filterClient',[...new Set(pRows.map(r=>r.client_name).filter(Boolean))].sort(), v=>v);
+  fillSelect('filterMK',    [...new Set(pRows.map(r=>r.marketplace_name).filter(Boolean))].sort(), v=>v);
+  fillSelect('filterBadFC', [...new Set(bRows.map(r=>r.fc_code).filter(Boolean))].sort(), v=>v);
+  fillSelect('filterBadMK', [...new Set(bRows.map(r=>r.marketplace_name).filter(Boolean))].sort(), v=>v);
+}
+
+function fillSelect(id, vals, labelFn){
+  const el=document.getElementById(id);
+  const prev=el.value;
+  const label={'filterFC':'All FCs','filterClient':'All Clients','filterMK':'All Marketplaces',
+                'filterBadFC':'All FCs','filterBadMK':'All Marketplaces'}[id]||'All';
+  el.innerHTML=`<option value="">${label}</option>`;
+  vals.forEach(v=>{
+    const o=document.createElement('option');
+    o.value=v; o.textContent=labelFn(v);
+    if(v===prev) o.selected=true;
+    el.appendChild(o);
+  });
+}
+
+/* ════════════════════════════════════
+   RENDER PENDING TABLE
+════════════════════════════════════ */
+function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function nc(v,cls=''){
+  return `<td class="num ${v===0?'zero':cls}">${v===0?'–':v.toLocaleString('en-IN')}</td>`;
+}
+
+function applyPendingFilters(tree){
+  const sF=document.getElementById('filterFC').value;
+  const sC=document.getElementById('filterClient').value;
+  const sM=document.getElementById('filterMK').value;
+  if(!sF&&!sC&&!sM) return tree;
+  const out={};
+  for(const [fc,fcO] of Object.entries(tree)){
+    if(sF&&fc!==sF) continue;
+    const clients={};
+    for(const [cl,clO] of Object.entries(fcO.clients)){
+      if(sC&&cl!==sC) continue;
+      const mks={};
+      for(const [mk,bk] of Object.entries(clO.marketplaces)){
+        if(sM&&mk!==sM) continue;
+        mks[mk]=bk;
+      }
+      if(sM&&!Object.keys(mks).length) continue;
+      const cc=emptyB();
+      Object.values(sM?mks:clO.marketplaces).forEach(b=>['d0','d3','d7','d14','d14p'].forEach(k=>cc[k]+=b[k]));
+      clients[cl]={marketplaces:sM?mks:clO.marketplaces, counts:sM?cc:clO.counts};
+    }
+    if((sC||sM)&&!Object.keys(clients).length) continue;
+    const fc2=clients;
+    const fcc=emptyB();
+    Object.values(fc2).forEach(c=>['d0','d3','d7','d14','d14p'].forEach(k=>fcc[k]+=c.counts[k]));
+    out[fc]={name:fcO.name, clients:fc2, counts:(sC||sM)?fcc:fcO.counts};
+  }
+  return out;
+}
+
+function renderPending(){
+  const tree=applyPendingFilters(pendingTree);
+  const grand=emptyB(); let tb='', fcCt=0;
+
+  const sortedFCs=Object.entries(tree).sort((a,b)=>totB(b[1].counts)-totB(a[1].counts));
+  for(const [fc,fcO] of sortedFCs){
+    fcCt++;
+    const open=expandedFC.has(fc), fcT=totB(fcO.counts);
+    ['d0','d3','d7','d14','d14p'].forEach(k=>grand[k]+=fcO.counts[k]);
+
+    tb+=`<tr class="fc-row" onclick="toggleFC(${JSON.stringify(fc)})">
+      <td><span class="chevron ${open?'open':''}">▶</span>${esc(fc)} – ${esc(fcO.name)}</td>
+      ${nc(fcO.counts.d0)}${nc(fcO.counts.d3,'blue')}${nc(fcO.counts.d7,'watch')}${nc(fcO.counts.d14,'warm')}${nc(fcO.counts.d14p,'hot')}
+      <td class="num tot-cell">${fcT.toLocaleString('en-IN')}</td></tr>`;
+
+    for(const [cl,clO] of Object.entries(fcO.clients).sort((a,b)=>totB(b[1].counts)-totB(a[1].counts))){
+      const ck=`${fc}|${cl}`, clOpen=expandedCL.has(ck), clT=totB(clO.counts);
+      tb+=`<tr class="cl-row${open?'':' hidden'}" onclick="toggleCL(${JSON.stringify(fc)},${JSON.stringify(cl)})">
+        <td><span class="chevron ${clOpen?'open':''}">▶</span>${esc(cl)}</td>
+        ${nc(clO.counts.d0)}${nc(clO.counts.d3,'blue')}${nc(clO.counts.d7,'watch')}${nc(clO.counts.d14,'warm')}${nc(clO.counts.d14p,'hot')}
+        <td class="num tot-cell">${clT.toLocaleString('en-IN')}</td></tr>`;
+
+      for(const [mk,bk] of Object.entries(clO.marketplaces).sort((a,b)=>totB(b[1])-totB(a[1]))){
+        tb+=`<tr class="mk-row${(open&&clOpen)?'':' hidden'}">
+          <td>${esc(mk)}</td>
+          ${nc(bk.d0)}${nc(bk.d3,'blue')}${nc(bk.d7,'watch')}${nc(bk.d14,'warm')}${nc(bk.d14p,'hot')}
+          <td class="num tot-cell">${totB(bk).toLocaleString('en-IN')}</td></tr>`;
+      }
+    }
+  }
+
+  const gT=totB(grand);
+  tb+=`<tr class="total-row"><td>GRAND TOTAL</td>
+    <td class="num">${grand.d0.toLocaleString('en-IN')}</td>
+    <td class="num">${grand.d3.toLocaleString('en-IN')}</td>
+    <td class="num">${grand.d7.toLocaleString('en-IN')}</td>
+    <td class="num">${grand.d14.toLocaleString('en-IN')}</td>
+    <td class="num">${grand.d14p.toLocaleString('en-IN')}</td>
+    <td class="num">${gT.toLocaleString('en-IN')}</td></tr>`;
+
+  document.getElementById('pendingTable').innerHTML=`
+    <table><thead><tr>
+      <th>FC / Client / Marketplace</th>
+      <th class="d0">D0</th><th class="d3">D+3</th><th class="d7">D+7</th>
+      <th class="d14">D+14</th><th class="d14p">&gt;D+14</th><th class="tot">Total</th>
+    </tr></thead><tbody>${tb}</tbody></table>`;
+
+  document.getElementById('pendingCount').textContent=
+    `${gT.toLocaleString('en-IN')} tracking IDs across ${fcCt} FCs`;
+}
+
+/* ════════════════════════════════════
+   PIE CHART — QC Status
+════════════════════════════════════ */
+let pieChartActive = null; // currently hovered segment index
+
+function renderPieChart() {
+  const { GOOD, BAD, PENDING } = qcStatusCounts;
+  const total = GOOD + BAD + PENDING || 1;
+
+  const segments = [
+    { label: 'GOOD',    value: GOOD,    color: '#22c55e', dimColor: 'rgba(34,197,94,.25)' },
+    { label: 'PENDING', value: PENDING, color: '#f59e0b', dimColor: 'rgba(245,158,11,.25)' },
+    { label: 'BAD',     value: BAD,     color: '#ef4444', dimColor: 'rgba(239,68,68,.25)' },
+  ];
+
+  const canvas = document.getElementById('pieCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const cx = W/2, cy = H/2, R = 112, r = 74;
+  const GAP = 0.025;
+
+  function drawPie(activeIdx) {
+    ctx.clearRect(0, 0, W, H);
+    let startAngle = -Math.PI / 2;
+    segments.forEach((seg, i) => {
+      const slice = (seg.value / total) * (2 * Math.PI - segments.length * GAP);
+      const endAngle = startAngle + slice;
+      const isActive = activeIdx === null || activeIdx === i;
+      const radius = (activeIdx === i) ? R + 8 : R;
+
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, radius, startAngle + GAP/2, endAngle - GAP/2);
+      ctx.closePath();
+      ctx.save();
+      ctx.fillStyle = isActive ? seg.color : seg.dimColor;
+      ctx.shadowColor = (activeIdx === i) ? seg.color : 'transparent';
+      ctx.shadowBlur  = (activeIdx === i) ? 20 : 0;
+      ctx.fill();
+      ctx.restore();
+
+      ctx.save();
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, 2*Math.PI);
+      ctx.fill();
+      ctx.restore();
+
+      startAngle = endAngle;
+    });
+  }
+
+  drawPie(null);
+
+  // Center label
+  const centerVal = document.getElementById('pieCenterVal');
+  const centerLbl = document.getElementById('pieCenterLbl');
+  centerVal.textContent = total.toLocaleString('en-IN');
+  centerLbl.textContent = 'Total';
+
+  canvas.style.cursor = 'pointer';
+  canvas.onmousemove = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const mx = (e.clientX - rect.left) * scaleX - cx;
+    const my = (e.clientY - rect.top) * scaleY - cy;
+    const dist = Math.sqrt(mx*mx + my*my);
+    if (dist < r || dist > R + 14) {
+      if (pieChartActive !== null) { pieChartActive = null; drawPie(null); centerVal.textContent=total.toLocaleString('en-IN'); centerLbl.textContent='Total'; }
+      return;
+    }
+    let angle = Math.atan2(my, mx) + Math.PI/2;
+    if (angle < 0) angle += 2*Math.PI;
+    let start = 0;
+    let found = null;
+    segments.forEach((seg, i) => {
+      const slice = (seg.value / total) * (2 * Math.PI - segments.length * GAP);
+      if (angle >= start && angle < start + slice + GAP) found = i;
+      start += slice + GAP;
+    });
+    if (found !== null && found !== pieChartActive) {
+      pieChartActive = found;
+      drawPie(found);
+      const s = segments[found];
+      centerVal.textContent = s.value.toLocaleString('en-IN');
+      centerLbl.textContent = s.label;
+    }
+  };
+  canvas.onmouseleave = () => {
+    pieChartActive = null;
+    drawPie(null);
+    centerVal.textContent = total.toLocaleString('en-IN');
+    centerLbl.textContent = 'Total';
+  };
+
+  // ── Legend ──
+  const leg = document.getElementById('pieLegend');
+  leg.innerHTML = segments.map((s, i) => `
+    <div class="pie-leg-item" onmouseenter="pieHover(${i})" onmouseleave="pieUnhover()" style="border-left:3px solid ${s.color}">
+      <div class="pie-leg-left">
+        <div class="pie-leg-dot" style="background:${s.color}"></div>
+        <div class="pie-leg-name">${s.label}</div>
+      </div>
+      <div class="pie-leg-right">
+        <div class="pie-leg-count">${s.value.toLocaleString('en-IN')}</div>
+        <div class="pie-leg-pct">${(s.value/total*100).toFixed(1)}%</div>
+      </div>
+    </div>`).join('');
+
+  // ── Stats panel ──
+  const grand = {}; Object.values(pendingTree).forEach(f=>['d14p'].forEach(k=>{ grand[k]=(grand[k]||0)+f.counts[k]; }));
+  document.getElementById('ps-total').textContent    = total.toLocaleString('en-IN');
+  document.getElementById('ps-good').textContent     = GOOD.toLocaleString('en-IN');
+  document.getElementById('ps-good-pct').textContent = pct(GOOD, total) + ' of total';
+  document.getElementById('ps-pending').textContent  = PENDING.toLocaleString('en-IN');
+  document.getElementById('ps-pending-pct').textContent = pct(PENDING, total) + ' of total';
+  document.getElementById('ps-bad').textContent      = BAD.toLocaleString('en-IN');
+  document.getElementById('ps-bad-pct').textContent  = pct(BAD, total) + ' of total';
+  document.getElementById('ps-badnt').textContent    = qcStatusCounts.totalBad.toLocaleString('en-IN');
+  document.getElementById('ps-critical').textContent = (grand.d14p||0).toLocaleString('en-IN');
+}
+
+// Called from legend hover
+function pieHover(i) {
+  const canvas = document.getElementById('pieCanvas');
+  if (!canvas) return;
+  pieChartActive = i;
+  const { GOOD, BAD, PENDING } = qcStatusCounts;
+  const total = GOOD + BAD + PENDING || 1;
+  const segments = [
+    { label: 'GOOD',    value: GOOD,    color: '#22c55e', dimColor: 'rgba(34,197,94,.25)' },
+    { label: 'PENDING', value: PENDING, color: '#f59e0b', dimColor: 'rgba(245,158,11,.25)' },
+    { label: 'BAD',     value: BAD,     color: '#ef4444', dimColor: 'rgba(239,68,68,.25)' },
+  ];
+  const ctx = canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height, cx=W/2, cy=H/2, R=112, r=74, GAP=0.025;
+  ctx.clearRect(0,0,W,H);
+  let startAngle = -Math.PI/2;
+  segments.forEach((seg,idx) => {
+    const slice = (seg.value/total)*(2*Math.PI - segments.length*GAP);
+    const endAngle = startAngle + slice;
+    const radius = idx===i ? R+8 : R;
+    ctx.beginPath(); ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,radius,startAngle+GAP/2,endAngle-GAP/2);
+    ctx.closePath();
+    ctx.save(); ctx.fillStyle = idx===i ? seg.color : seg.dimColor;
+    ctx.shadowColor = idx===i ? seg.color : 'transparent'; ctx.shadowBlur = idx===i ? 20 : 0;
+    ctx.fill(); ctx.restore();
+    ctx.save(); ctx.globalCompositeOperation='destination-out';
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,2*Math.PI); ctx.fill(); ctx.restore();
+    startAngle = endAngle;
+  });
+  document.getElementById('pieCenterVal').textContent = segments[i].value.toLocaleString('en-IN');
+  document.getElementById('pieCenterLbl').textContent = segments[i].label;
+  document.querySelectorAll('.pie-leg-item').forEach((el,idx)=>el.classList.toggle('active',idx===i));
+}
+function pieUnhover() {
+  pieChartActive = null;
+  renderPieChart();
+  document.querySelectorAll('.pie-leg-item').forEach(el=>el.classList.remove('active'));
+}
+
+/* ════════════════════════════════════
+   RENDER BAD QC TABLE — MATRIX STYLE
+   Rows: client_name → marketplace_name
+   Cols: D+3 | D+7 | D+14 | >D+14 | Total
+════════════════════════════════════ */
+function renderBad(){
+  const sF = document.getElementById('filterBadFC').value;
+  const sM = document.getElementById('filterBadMK').value;
+
+  let rows = badRows;
+  if(sF) rows = rows.filter(r => r.fc_code === sF);
+  if(sM) rows = rows.filter(r => r.marketplace_name === sM);
+
+  document.getElementById('badCount').textContent = `${rows.length.toLocaleString('en-IN')} records`;
+
+  if(!rows.length){
+    document.getElementById('badTable').innerHTML =
+      `<div class="state-msg" style="color:var(--green)"><span style="font-size:2rem">✅</span><span>No BAD QC records without a ticket!</span></div>`;
+    return;
+  }
+
+  // Build matrix: { client: { marketplace: { d3,d7,d14,d14p } } }
+  // NOTE: BAD QC aging uses only D+3/D+7/D+14/>D+14 (no D0 per your DAX)
+  const matrix = {};
+  const grandB = { d3:0, d7:0, d14:0, d14p:0 };
+
+  for(const r of rows){
+    const cl = r.client_name || '—';
+    const mk = r.marketplace_name || '—';
+    // aging bucket for BAD (no D0 bucket per your DAX)
+    const bk = agingBucketBad(r.shipment_report_date);
+    if(!matrix[cl]) matrix[cl] = {};
+    if(!matrix[cl][mk]) matrix[cl][mk] = { d3:0, d7:0, d14:0, d14p:0 };
+    matrix[cl][mk][bk]++;
+    grandB[bk]++;
+  }
+
+  const totRow = (b) => b.d3 + b.d7 + b.d14 + b.d14p;
+
+  let tb = '';
+  const sortedClients = Object.entries(matrix).sort((a,b) => totRow(Object.values(b[1]).reduce((acc,mk)=>({d3:acc.d3+mk.d3,d7:acc.d7+mk.d7,d14:acc.d14+mk.d14,d14p:acc.d14p+mk.d14p}),{d3:0,d7:0,d14:0,d14p:0})) - totRow(Object.values(a[1]).reduce((acc,mk)=>({d3:acc.d3+mk.d3,d7:acc.d7+mk.d7,d14:acc.d14+mk.d14,d14p:acc.d14p+mk.d14p}),{d3:0,d7:0,d14:0,d14p:0})));
+
+  for(const [cl, mks] of sortedClients){
+    // Sum client totals
+    const clB = { d3:0, d7:0, d14:0, d14p:0 };
+    Object.values(mks).forEach(b=>{ clB.d3+=b.d3; clB.d7+=b.d7; clB.d14+=b.d14; clB.d14p+=b.d14p; });
+    const clT = totRow(clB);
+    const ck = `bad|${cl}`;
+    const open = expandedCL.has(ck);
+
+    tb += `<tr class="bad-cl-row" onclick="toggleBadCL(${JSON.stringify(ck)})">
+      <td><span class="chevron ${open?'open':''}">▶</span>${esc(cl)}</td>
+      ${bnc(clB.d3,'blue')}${bnc(clB.d7,'watch')}${bnc(clB.d14,'warm')}${bnc(clB.d14p,'hot')}
+      <td class="num tot-cell">${clT > 0 ? clT.toLocaleString('en-IN') : '–'}</td>
+    </tr>`;
+
+    for(const [mk, bk] of Object.entries(mks).sort((a,b) => totRow(b[1]) - totRow(a[1]))){
+      const mkT = totRow(bk);
+      tb += `<tr class="bad-mk-row${open ? '' : ' hidden'}">
+        <td>${esc(mk)}</td>
+        ${bnc(bk.d3,'blue')}${bnc(bk.d7,'watch')}${bnc(bk.d14,'warm')}${bnc(bk.d14p,'hot')}
+        <td class="num tot-cell">${mkT > 0 ? mkT.toLocaleString('en-IN') : '–'}</td>
+      </tr>`;
+    }
+  }
+
+  const grandT = totRow(grandB);
+  tb += `<tr class="bad-total-row">
+    <td>TOTAL</td>
+    ${bnc(grandB.d3,'blue')}${bnc(grandB.d7,'watch')}${bnc(grandB.d14,'warm')}${bnc(grandB.d14p,'hot')}
+    <td class="num">${grandT.toLocaleString('en-IN')}</td>
+  </tr>`;
+
+  document.getElementById('badTable').innerHTML = `
+    <table><thead><tr>
+      <th style="min-width:220px">Client / Marketplace</th>
+      <th class="bd3">D+3</th>
+      <th class="bd7">D+7</th>
+      <th class="bd14">D+14</th>
+      <th class="bd14p">&gt;D+14</th>
+      <th class="btot">Total</th>
+    </tr></thead><tbody>${tb}</tbody></table>`;
+}
+
+// BAD aging bucket: matches your DAX exactly (no D0 bucket)
+function agingBucketBad(dateStr) {
+  if(!dateStr) return 'd14p';
+  const d = new Date(dateStr); d.setHours(0,0,0,0);
+  const diff = Math.floor((today - d) / 86400000);
+  if(diff <= 3)  return 'd3';
+  if(diff <= 7)  return 'd7';
+  if(diff <= 14) return 'd14';
+  return 'd14p';
+}
+
+function bnc(v, cls=''){
+  return `<td class="num ${v===0?'zero':cls}">${v===0?'–':v.toLocaleString('en-IN')}</td>`;
+}
+
+function toggleBadCL(ck){
+  expandedCL.has(ck) ? expandedCL.delete(ck) : expandedCL.add(ck);
+  renderBad();
+}
+
+/* ════════════════════════════════════
+   EXPAND / COLLAPSE
+════════════════════════════════════ */
+function toggleFC(fc){
+  if(expandedFC.has(fc)){
+    expandedFC.delete(fc);
+    expandedCL.forEach(k=>{if(k.startsWith(fc+'|'))expandedCL.delete(k);});
+  } else expandedFC.add(fc);
+  renderPending();
+}
+function toggleCL(fc,cl){
+  const k=`${fc}|${cl}`;
+  expandedCL.has(k)?expandedCL.delete(k):expandedCL.add(k);
+  renderPending();
+}
+function expandAll(){
+  Object.entries(pendingTree).forEach(([fc,o])=>{
+    expandedFC.add(fc);
+    Object.keys(o.clients).forEach(cl=>expandedCL.add(`${fc}|${cl}`));
+  });
+  renderPending();
+}
+function collapseAll(){ expandedFC.clear(); expandedCL.clear(); renderPending(); }
+
+/* ════════════════════════════════════
+   TABS
+════════════════════════════════════ */
+function switchTab(name, el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('panel-'+name).classList.add('active');
+  // Re-render pie chart when switching to it (canvas may need redraw after display:none)
+  if(name === 'chart' && qcStatusCounts.GOOD + qcStatusCounts.BAD + qcStatusCounts.PENDING > 0){
+    requestAnimationFrame(() => renderPieChart());
+  }
+}
+
+/* ════════════════════════════════════
+   DIAGNOSTIC
+════════════════════════════════════ */
+function toggleDiag(){
+  const box=document.getElementById('diagBox');
+  if(!box.classList.contains('open')){ box.classList.add('open'); runDiag(); }
+  else box.classList.remove('open');
+}
+
+async function runDiag(){
+  const content=document.getElementById('diagContent');
+  content.innerHTML='<div style="color:var(--text3);font-size:.74rem">⏳ Running 3 quick tests…</div>';
+  let html='';
+
+  html+=diag_step('1','Network & API Key');
+  try{
+    const r=await apiGet(`/rest/v1/${TABLE}?limit=0`);
+    html+=r.ok||r.status===416
+      ? diag_res('ok',`✓ Connected OK (HTTP ${r.status}) — API key valid`)
+      : r.status===403 ? diag_res('err',`✗ HTTP 403 — RLS is blocking.\n\nFIX:\n1. Supabase → Authentication → Policies\n2. Find "${TABLE}"\n3. New Policy → "Enable read access for all users" → Save`)
+      : r.status===401 ? diag_res('err','✗ HTTP 401 — Wrong API key')
+      : r.status===404 ? diag_res('err',`✗ HTTP 404 — Table "${TABLE}" not found. Check spelling in Supabase → Table Editor`)
+      : diag_res('err',`✗ HTTP ${r.status}`);
+  }catch(e){ html+=diag_res('err',`✗ Network error: ${e.message}\n\nTry:\n• Check internet connection\n• Open in Chrome\n• Disable ad blockers`); }
+  content.innerHTML=html;
+
+  html+=diag_step('2','Actual qc_status values in your table');
+  try{
+    const r=await apiGet(`/rest/v1/${TABLE}?select=qc_status&limit=50`);
+    if(r.ok){
+      const data=await r.json();
+      const vals=[...new Set(data.map(x=>x.qc_status))].filter(Boolean);
+      const hasPending=vals.some(v=>v==='PENDING');
+      html+=diag_res(hasPending?'ok':'info',
+        `Values found: ${vals.join(', ')}\n\n${hasPending?'✓ "PENDING" found — filter will work correctly.':'⚠ "PENDING" not found in first 50 rows. Dashboard uses: qc_status=eq.PENDING\nIf your value uses different case, let me know!'}`);
+    } else html+=diag_res('err',`HTTP ${r.status}`);
+  }catch(e){ html+=diag_res('err',e.message); }
+  content.innerHTML=html;
+
+  html+=diag_step('3','Count of PENDING records');
+  try{
+    const r=await apiGet(`/rest/v1/${TABLE}?qc_status=eq.PENDING&limit=1`,{"Prefer":"count=exact","Range":"0-0"});
+    const cr=r.headers.get('content-range')||'unknown';
+    html+=r.ok||r.status===206
+      ? diag_res('ok',`✓ Filter working!\nContent-Range: ${cr}\n(Number after / = total PENDING count)`)
+      : diag_res('err',`HTTP ${r.status}`);
+    html+=`<div class="ok-banner">✅ All OK! Click <strong>Refresh</strong> to load dashboard.</div>`;
+  }catch(e){ html+=diag_res('err',e.message); }
+  content.innerHTML=html;
+}
+
+function diag_step(n,txt){ return `<div class="diag-step"><div class="diag-label">Test ${n} — ${txt}</div>`; }
+function diag_res(cls,msg){ return `<div class="diag-result ${cls}">${msg}</div></div>`; }
+
+/* ════════════════════════════════════
+   STATE HELPERS
+════════════════════════════════════ */
+function setTableLoading(id, msg){
+  document.getElementById(id).innerHTML=
+    `<div class="state-msg"><div class="spinner"></div><span>${msg}</span></div>`;
+}
+function setTableError(id, msg){
+  document.getElementById(id).innerHTML=
+    `<div class="state-msg">
+      <span style="font-size:2rem">⚠️</span>
+      <strong style="color:var(--red);max-width:480px;text-align:center">${msg}</strong>
+      <span style="color:var(--text3);font-size:.75rem">Click <strong style="color:var(--blue)">Diagnose</strong> for exact fix steps.</span>
+    </div>`;
+}
+
+/* ════════════════════════════════════
+   INIT
+════════════════════════════════════ */
+loadData();
+</script>
+</body>
+</html>
